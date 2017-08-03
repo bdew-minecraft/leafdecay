@@ -1,0 +1,143 @@
+buildscript {
+    configurations.all {
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
+    repositories {
+        mavenCentral()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        maven {
+            name = "gradle plugins"
+            url = "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.0.9"
+    }
+}
+
+apply plugin: 'scala'
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'com.matthewprenger.cursegradle'
+
+file "build.properties" withReader {
+    def prop = new Properties()
+    prop.load(it)
+    ext.config = new ConfigSlurper().parse prop
+}
+
+if (project.hasProperty('forgeOverride')) {
+    config.forge.version = forgeOverride
+}
+
+if (project.hasProperty('buildnum')) {
+    ext.simpleVersion = "${config.leafdecay.version}.${project.buildnum}"
+} else {
+    ext.simpleVersion = "${config.leafdecay.version}-DEV"
+}
+
+version = simpleVersion + '-mc' + config.minecraft.version
+
+group = "net.bdew"
+archivesBaseName = "leafdecay"
+
+minecraft {
+    version = "${config.minecraft.version}-${config.forge.version}"
+    mappings = "${config.minecraft.mappings}"
+    makeObfSourceJar = false
+    runDir = "run"
+    replace("LEAFDECAY_VER", simpleVersion.toString())
+}
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+
+sourceSets {
+    main {
+        scala {
+            srcDir 'src'
+        }
+        resources {
+            srcDir 'resources'
+        }
+    }
+}
+
+processResources {
+    inputs.property "tokens", minecraft.replacements
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        filter(ReplaceTokens, tokens: minecraft.replacements)
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+task deobfJar(type: Jar) {
+    from sourceSets.main.output
+    classifier "dev"
+}
+
+task sourceJarReal(type: Jar) {
+    // FG has a task named sourceJar that seems to be borked
+    classifier "sources"
+}
+
+afterEvaluate { project ->
+    // Use sources after replacements
+    tasks.getByPath(":sourceJarReal").from(tasks.getByPath(":sourceMainScala").outputs.files)
+}
+
+artifacts {
+    archives sourceJarReal
+    archives deobfJar
+}
+
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact deobfJar
+            artifact sourceJarReal
+        }
+    }
+    repositories {
+        maven {
+            url "file://var/www/maven"
+        }
+    }
+}
+
+curseforge {
+    apiKey = project.hasProperty("curseForgeApiKey") ? project.curseForgeApiKey : ""
+    project {
+        id = config.curseforge.id
+
+        releaseType = "alpha"
+        changelog = project.hasProperty("changelog") ? project.changelog : "No changelog available"
+
+        addGameVersion config.minecraft.version
+
+        mainArtifact(jar) {
+            displayName = "LeafDecayAccelerator ${simpleVersion} (MC ${config.minecraft.version})"
+        }
+
+        addArtifact(deobfJar) {
+            displayName = "LeafDecayAccelerator ${simpleVersion} Deobfuscated (MC ${config.minecraft.version})"
+        }
+
+        addArtifact(sourceJarReal) {
+            displayName = "LeafDecayAccelerator ${simpleVersion} Source (MC ${config.minecraft.version})"
+        }
+    }
+}

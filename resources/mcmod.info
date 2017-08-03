@@ -1,0 +1,20 @@
+[
+{
+  "modid": "leafdecay",
+  "name": "Leaf Decay Accelerator",
+  "description": "",
+  "version": "@LEAFDECAY_VER@",
+  "url": "bdew.net",
+  "updateUrl": "",
+  "authorList": [
+    "bdew"
+  ],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [
+  ],
+  "parent":"",
+  "dependencies": [
+  ]
+}
+]
