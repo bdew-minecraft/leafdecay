@@ -127,6 +127,8 @@ curseforge {
         changelog = project.hasProperty("changelog") ? project.changelog : "No changelog available"
 
         addGameVersion config.minecraft.version
+        addGameVersion "1.12"
+        addGameVersion "1.12.1"
 
         mainArtifact(jar) {
             displayName = "LeafDecayAccelerator ${simpleVersion} (MC ${config.minecraft.version})"

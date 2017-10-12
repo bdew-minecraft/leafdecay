@@ -23,7 +23,7 @@ import net.minecraftforge.fml.common.Mod.EventHandler
 import net.minecraftforge.fml.common.event.{FMLInitializationEvent, FMLPreInitializationEvent}
 import org.apache.logging.log4j.Logger
 
-@Mod(modid = "leafdecay", name = "Leaf Decay Accelerator", version = "LEAFDECAY_VER", modLanguage = "scala")
+@Mod(modid = "leafdecay", name = "Leaf Decay Accelerator", version = "LEAFDECAY_VER", modLanguage = "scala", acceptedMinecraftVersions = "[1.12,1.12.2]")
 object LeafDecay {
   var log: Logger = _
 
